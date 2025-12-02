@@ -129,3 +129,24 @@ func ReissueMultiOTPQR(multiOTPBinPath string, user string) error {
 
 	return nil
 }
+
+// Generate PNG QR
+// multiotp -qrcode <USER> <FULL PATH TO OUTPUT PNG FILE>
+func GenerateMultiOTPQRPng(multiOTPBinPath string, user string, qrCodesPath string) error {
+	// form png file full path
+	qrFullPath := fmt.Sprintf("%s/%s.png", qrCodesPath, user)
+
+	cmd := exec.Command(multiOTPBinPath, "-qrcode", user, qrFullPath)
+	// due to multiotp console tools throw Exit codes every time
+	// need to check err.ExitCode, because err will be always
+	// 16 INFO: QRcode successfully created
+	_, err := cmd.Output()
+
+	if err, ok := err.(*exec.ExitError); ok {
+		if err.ExitCode() != 16 {
+			return err
+		}
+	}
+
+	return nil
+}

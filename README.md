@@ -61,6 +61,28 @@ func ReissueMultiOTPQR(multiOTPBinPath string, user string) error
 
 Reissue MultiOTP QR
 
-First del user from MultiOTP db
-Second resync MultiOTP db to get same user back with new QR generated
-May take some time to resync(depend of users number)
+* user - user's login
+* multiOTPBinPath - full path to multiotp binary
+
+- First del user from MultiOTP db
+- Second resync MultiOTP db to get same user back with new QR generated(May take some time to resync(depend of users number))
+
+<h3>GenerateMultiOTPQRPng</h3>
+
+Generate PNG QR
+
+```
+func GenerateMultiOTPQRPNG(multiOTPBinPath string, user string, qrCodesPath string) error
+```
+
+MutliOTP CLI command: 
+```
+multiotp -qrcode <USER> <FULL PATH TO OUTPUT PNG FILE>
+```
+
+* user - user's login
+* multiOTPBinPath - full path to multiotp binary
+* qrCodesPath - dir to save qr png-files
+
+Due to multiotp console tools throw Exit codes every time need to check err.ExitCode, because err will be always set.
+* 16 INFO: QRcode successfully created
