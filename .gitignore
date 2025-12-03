@@ -2,7 +2,7 @@
 *
 
 # except
-!cmd/main.go
+!cmd/examples/main.go
 !multiotpwork.go
 !go.mod
 !.gitignore

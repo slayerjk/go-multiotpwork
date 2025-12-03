@@ -31,15 +31,19 @@ func GetMultiOTPTokenURL(user string, multiOTPBinPath string, descrString string
 	// need to check err.ExitCode, because err will be always
 	// exit status 17: is success for '-urllink' cmd
 	out, err := cmd.Output()
-	if err, ok := err.(*exec.ExitError); ok {
-		// 17 INFO: UrlLink successfully created
-		// 21 ERROR: User doesn't exist
-		switch {
-		case err.ExitCode() == 21:
-			return nil, fmt.Errorf("%s doesn't exist", user)
-		case err.ExitCode() != 17:
-			return nil, err
+
+	if err != nil {
+		if err, ok := err.(*exec.ExitError); ok {
+			// 17 INFO: UrlLink successfully created
+			// 21 ERROR: User doesn't exist
+			switch {
+			case err.ExitCode() == 21:
+				return nil, fmt.Errorf("%s doesn't exist", user)
+			case err.ExitCode() != 17:
+				return nil, err
+			}
 		}
+		return nil, fmt.Errorf("multiotp exec err: \n\t%v", err)
 	}
 
 	// check output is what expected
@@ -72,7 +76,7 @@ func GetMultiOTPTokenURL(user string, multiOTPBinPath string, descrString string
 
 // Delete MultiOTP User
 // If user doesn't exist - returns noting(not error)
-func delMultiOTPUser(multiOTPBinPath string, user string) error {
+func DelMultiOTPUser(multiOTPBinPath string, user string) error {
 	// define command to delete user
 	cmd := exec.Command(multiOTPBinPath, "-delete", user)
 	// due to multiotp console tools throw Exit codes every time
@@ -82,20 +86,24 @@ func delMultiOTPUser(multiOTPBinPath string, user string) error {
 	// 19 INFO: Requested operation successfully done: is success for '-delete user' cmd
 	// 21 ERROR: User doesn't exist: not error
 	_, err := cmd.Output()
-	if err, ok := err.(*exec.ExitError); ok {
-		switch {
-		case err.ExitCode() == 21:
-			return nil
-		case err.ExitCode() != 12 && err.ExitCode() != 19:
-			return err
+
+	if err != nil {
+		if err, ok := err.(*exec.ExitError); ok {
+			switch {
+			case err.ExitCode() == 21:
+				return nil
+			case err.ExitCode() != 12 && err.ExitCode() != 19:
+				return err
+			}
 		}
+		return fmt.Errorf("multiotp exec err: \n\t%v", err)
 	}
 
 	return nil
 }
 
 // Resync MultiOTP Users
-func resyncMultiOTPUsers(multiOTPBinPath string) error {
+func ResyncMultiOTPUsers(multiOTPBinPath string) error {
 	// define command to delete user
 	cmd := exec.Command(multiOTPBinPath, "-ldap-users-sync")
 	// due to multiotp console tools throw Exit codes every time
@@ -103,10 +111,13 @@ func resyncMultiOTPUsers(multiOTPBinPath string) error {
 	// 19 INFO: Requested operation successfully done: is success for '-delete user' cmd
 	_, err := cmd.Output()
 
-	if err, ok := err.(*exec.ExitError); ok {
-		if err.ExitCode() != 19 {
-			return err
+	if err != nil {
+		if err, ok := err.(*exec.ExitError); ok {
+			if err.ExitCode() != 19 {
+				return err
+			}
 		}
+		return fmt.Errorf("multiotp exec err: \n\t%v", err)
 	}
 
 	return nil
@@ -115,14 +126,14 @@ func resyncMultiOTPUsers(multiOTPBinPath string) error {
 // Reissue MultiOTP QR
 func ReissueMultiOTPQR(multiOTPBinPath string, user string) error {
 	// first del user from MultiOTP db
-	err := delMultiOTPUser(multiOTPBinPath, user)
+	err := DelMultiOTPUser(multiOTPBinPath, user)
 	if err != nil {
 		return fmt.Errorf("reissue qr: failed to del user:\n\t%v", err)
 	}
 
 	// second resync MultiOTP db to get same user back with new QR generated
 	// may take some time to resync(depend of users number)
-	err = resyncMultiOTPUsers(multiOTPBinPath)
+	err = ResyncMultiOTPUsers(multiOTPBinPath)
 	if err != nil {
 		return fmt.Errorf("reissue qr: failed to resync users:\n\t%v", err)
 	}
@@ -142,10 +153,16 @@ func GenerateMultiOTPQRPng(multiOTPBinPath string, user string, qrCodesPath stri
 	// 16 INFO: QRcode successfully created
 	_, err := cmd.Output()
 
-	if err, ok := err.(*exec.ExitError); ok {
-		if err.ExitCode() != 16 {
-			return err
+	if err != nil {
+		if err, ok := err.(*exec.ExitError); ok {
+			if err.ExitCode() != 16 {
+				if err.ExitCode() == 21 {
+					return fmt.Errorf("21 ERROR: User doesn't exist")
+				}
+				return fmt.Errorf("unknown err code: %v", err)
+			}
 		}
+		return fmt.Errorf("multiotp exec err: \n\t%v", err)
 	}
 
 	return nil
