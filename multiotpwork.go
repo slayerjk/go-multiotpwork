@@ -240,3 +240,64 @@ func GenerateMultiOTPQRPng(multiOTPBinPath string, user string, qrCodesPath stri
 
 	return nil
 }
+
+// Get LDAP user info
+// current version of MultiOTP(5.10.2.2) attributes of response are:
+// user, groups, accountdisable, mail, description, displayname, mobile, msnpallowdialin, synchronized_dn, language, account
+// returns map of 'attributes: values' pairs
+func GetLdapUserInfo(multiOTPBinPath string, user string) (map[string]string, error) {
+	result := make(map[string]string)
+
+	// check path exists
+	if ok, err := checkMultiOTPBin(multiOTPBinPath); !ok {
+		return nil, fmt.Errorf("multiotpBinPath doesn't exist or isn't executable: %v", err)
+	}
+
+	// define command to delete user
+	cmd := exec.Command(multiOTPBinPath, "-ldap-user-info", user)
+	// due to multiotp console tools throw Exit codes every time
+	// need to check err.ExitCode, because err will be always
+	// 19 INFO: Requested operation successfully done
+	// 21 ERROR: User doesn't exist: not error
+	out, err := cmd.Output()
+
+	if err != nil {
+		if err, ok := err.(*exec.ExitError); ok {
+			// 19 INFO: Requested operation successfully done
+			if err.ExitCode() != 19 {
+				return nil, fmt.Errorf("check MultiOTP err code: %v ; %s", err, out)
+			}
+		}
+	}
+
+	/*
+			Successful info example:
+
+			               user: vasya
+		                 groups: admins
+		         accountdisable:
+		                   mail: vasya@example.com
+		            description: some description of the user
+		            displayname: Pupkin Vasiliy Petrovich
+		                 mobile:
+		        msnpallowdialin:
+		        synchronized_dn: CN=Pupkin Vasiliy Petrovich,OU=SOMEOU,DC=example,DC=com
+		               language:
+		                account: vasya
+	*/
+
+	// get regexp matches of "key: value" strings
+	keyValuePattern := regexp.MustCompile(`(\w+:.*)`)
+	matches := keyValuePattern.FindAllStringSubmatch(string(out), -1)
+	if len(matches) == 0 {
+		return nil, fmt.Errorf("no matches of 'key: value' in response")
+	}
+
+	// form result map
+	for _, match := range matches {
+		splitStr := strings.Split(match[0], ":")
+		result[splitStr[0]] = splitStr[1]
+	}
+
+	return result, nil
+}

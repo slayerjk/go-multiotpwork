@@ -9,10 +9,10 @@ import (
 )
 
 func main() {
-	opt := flag.String("o", "none", "t=getTokenURL; d=delUser; r=resyncLdapUsers; rq=reissueUserQR; p=generatePNG")
+	opt := flag.String("o", "none", "t=getTokenURL; d=delUser; r=resyncLdapUsers; rq=reissueUserQR; p=generatePNG; i=ldap-user-info")
 	multiOTPBinPath := flag.String("m", "/usr/local/bin/multiotp/multiotp.php", "full path to multiotp binary")
 	qrCodesPath := flag.String("q", "/etc/multiotp/qrcodes", "qr codes full path, needs for '-o p'")
-	user := flag.String("u", "user", "user to generate qr")
+	user := flag.String("u", "user", "user name")
 	descrString := flag.String("ds", "TEST", "token description")
 	flag.Parse()
 
@@ -55,6 +55,13 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Println("DONE generating png QR for user")
+	case "i":
+		out, err := multiotp.GetLdapUserInfo(*multiOTPBinPath, *user)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fmt.Println("User LDAP Info:\n", out)
 	default:
 		fmt.Println("not valid value for -o")
 	}

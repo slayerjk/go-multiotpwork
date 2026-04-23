@@ -3,6 +3,7 @@
 
 # except
 !cmd/examples/main.go
+!cmd/.goreleaser.yaml
 !multiotpwork.go
 !go.mod
 !.gitignore
