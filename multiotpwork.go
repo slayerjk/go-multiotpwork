@@ -294,7 +294,7 @@ func GetLdapUserInfo(multiOTPBinPath string, user string) (map[string]string, er
 	// form result map
 	for _, match := range matches {
 		splitStr := strings.Split(match[0], ":")
-		result[splitStr[0]] = splitStr[1]
+		result[strings.Trim(splitStr[0], " ")] = strings.Trim(splitStr[1], " ")
 	}
 
 	return result, nil
