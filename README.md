@@ -93,6 +93,10 @@ Due to multiotp console tools throw Exit codes every time need to check err.Exit
 
 Get LDAP user info
 
+Due to multiotp console tools throw Exit codes every time need to check err.ExitCode, because err will be always 
+* 19 INFO: Requested operation successfully done
+
+
 Current version of MultiOTP(5.10.2.2) attributes of response are:
 * user, groups, accountdisable, mail, description, displayname, mobile, msnpallowdialin, synchronized_dn, language, account
 

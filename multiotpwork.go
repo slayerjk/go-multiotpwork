@@ -258,12 +258,10 @@ func GetLdapUserInfo(multiOTPBinPath string, user string) (map[string]string, er
 	// due to multiotp console tools throw Exit codes every time
 	// need to check err.ExitCode, because err will be always
 	// 19 INFO: Requested operation successfully done
-	// 21 ERROR: User doesn't exist: not error
 	out, err := cmd.Output()
 
 	if err != nil {
 		if err, ok := err.(*exec.ExitError); ok {
-			// 19 INFO: Requested operation successfully done
 			if err.ExitCode() != 19 {
 				return nil, fmt.Errorf("check MultiOTP err code: %v ; %s", err, out)
 			}
