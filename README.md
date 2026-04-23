@@ -86,3 +86,14 @@ multiotp -qrcode <USER> <FULL PATH TO OUTPUT PNG FILE>
 
 Due to multiotp console tools throw Exit codes every time need to check err.ExitCode, because err will be always set.
 * 16 INFO: QRcode successfully created
+
+<h3>GetLdapUserInfo</h3>
+
+```func GetLdapUserInfo(multiOTPBinPath string, user string) (map[string]string, error)```
+
+Get LDAP user info
+
+Current version of MultiOTP(5.10.2.2) attributes of response are:
+* user, groups, accountdisable, mail, description, displayname, mobile, msnpallowdialin, synchronized_dn, language, account
+
+Returns map of 'attributes: values' pairs
